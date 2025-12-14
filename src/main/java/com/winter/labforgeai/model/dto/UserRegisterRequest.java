@@ -2,6 +2,7 @@ package com.winter.labforgeai.model.dto;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -12,7 +13,7 @@ import java.io.Serializable;
 @Data  // 使用Lombok注解自动生成getter、setter等方法
 public class UserRegisterRequest implements Serializable {
 
-    // 序列化版本UID，用于在反序列化时验证版本一致性
+    @Serial
     private static final long serialVersionUID = 3191241716373120793L;
 
     /**

@@ -33,36 +33,42 @@ public interface UserService extends IService<User> {
      */
     String getEncryptPassword(String userPassword);
 
+
     /**
-     * 获取脱敏的已登录用户信息
+     * 根据用户信息获取登录用户视图对象
+     * 该方法用于将用户实体对象转换为登录用户视图对象，通常用于前端展示
      *
-     * @return
+     * @param user 用户实体对象，包含用户的完整信息
+     * @return LoginUserVO 登录用户视图对象，包含前端需要的用户信息
      */
     LoginUserVO getLoginUserVO(User user);
 
+
     /**
-     * 用户登录
+     * 用户登录接口方法
      *
-     * @param userAccount  用户账户
-     * @param userPassword 用户密码
-     * @param request
-     * @return 脱敏后的用户信息
+     * @param userAccount 用户登录账号
+     * @param userPassword 用户登录密码
+     * @param request HTTP请求对象，用于获取请求相关信息
+     * @return LoginUserVO 登录成功后的用户信息对象，包含用户的基本信息和登录状态等
      */
     LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
+
     /**
-     * 获取当前登录用户
-     *
-     * @param request
-     * @return
+     * 根据HTTP请求获取登录用户信息
+     * @param request HttpServletRequest对象，包含客户端请求信息
+     * @return User 返回当前登录的用户对象，如果用户未登录则可能返回null
      */
     User getLoginUser(HttpServletRequest request);
 
+
     /**
-     * 用户注销
-     *
-     * @param request
-     * @return
+     * 用户登出方法
+     * @param request HttpServletRequest对象，用于获取用户会话信息
+     * @return 登出操作是否成功执行
+     *         true: 登出成功
+     *         false: 登出失败
      */
     boolean userLogout(HttpServletRequest request);
 

@@ -2,6 +2,7 @@ package com.winter.labforgeai.model.vo;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -48,5 +49,6 @@ public class LoginUserVO implements Serializable {
      */
     private LocalDateTime updateTime;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }
