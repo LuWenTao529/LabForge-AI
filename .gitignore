@@ -1,5 +1,6 @@
 ### CUSTOM ###
 tmp
+/src/main/resources/application-local.yml
 
 HELP.md
 target/
@@ -34,4 +35,4 @@ build/
 
 ### VS Code ###
 .vscode/
-!/src/main/resources/application-local.yml
+
