@@ -6,6 +6,7 @@ import com.mybatisflex.core.service.IService;
 import com.winter.labforgeai.model.dto.chathistory.ChatHistoryQueryRequest;
 import com.winter.labforgeai.model.entity.ChatHistory;
 import com.winter.labforgeai.model.entity.User;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +37,16 @@ public interface ChatHistoryService extends IService<ChatHistory> {
      */
     boolean deleteByAppId(Long appId);
 
+
+    /**
+     * 将聊天历史记录加载到内存中的方法
+     *
+     * @param appId 应用程序ID，用于标识具体的应用
+     * @param chatMemory 聊天内存对象，用于存储加载的聊天历史
+     * @param maxCount 最大加载记录数，限制加载的历史记录条数
+     * @return 返回实际加载的记录数量
+     */
+    int loadChatHistoryToMemory(Long appId, MessageWindowChatMemory chatMemory, int maxCount);
 
     /**
      * 根据聊天历史查询请求参数获取查询包装器
