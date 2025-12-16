@@ -18,7 +18,7 @@ class AiCodeGeneratorFacadeTest {
 
     @Test
     void generateAndSaveCode() {
-        File file = aiCodeGeneratorFacade.generateAndSaveCode("任务记录网站，不超过20行代码", CodeGenTypeEnum.MULTI_FILE);
+        File file = aiCodeGeneratorFacade.generateAndSaveCode("任务记录网站，不超过20行代码", CodeGenTypeEnum.MULTI_FILE, 1L);
         Assertions.assertNotNull(file);
     }
 
@@ -29,7 +29,7 @@ class AiCodeGeneratorFacadeTest {
     @Test
     void generateAndSaveCodeStreamHtml() {
         // 调用AI代码生成器门面，生成并保存HTML代码流，主题为"任务记录网站，不超过20行代码"
-        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站，不超过20行代码", CodeGenTypeEnum.HTML);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站，不超过20行代码", CodeGenTypeEnum.HTML, 1L);
         // 阻塞等待所有数据收集完成，将流式数据转换为List集合
         List<String> result = codeStream.collectList().block();
         // 验证结果列表不为空，确保代码生成过程正常执行
@@ -46,7 +46,7 @@ class AiCodeGeneratorFacadeTest {
      */
     @Test
     void generateAndSaveCodeStreamMutiFile() {
-        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站，不超过20行代码", CodeGenTypeEnum.MULTI_FILE);
+        Flux<String> codeStream = aiCodeGeneratorFacade.generateAndSaveCodeStream("任务记录网站，不超过20行代码", CodeGenTypeEnum.MULTI_FILE, 1L);
         // 阻塞等待所有数据收集完成
         List<String> result = codeStream.collectList().block();
         // 验证结果
