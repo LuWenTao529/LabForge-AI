@@ -21,8 +21,8 @@ import com.winter.labforgeai.model.enums.CodeGenTypeEnum;
 import com.winter.labforgeai.model.vo.AppVO;
 import com.winter.labforgeai.service.AppService;
 import com.winter.labforgeai.service.UserService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
@@ -42,11 +42,13 @@ import java.util.Map;
 @RequestMapping("/app")
 public class AppController {
 
-    @Autowired
+    @Resource
     private AppService appService;
 
-    @Autowired
+    @Resource
     private UserService userService;
+
+    // region AI应用管理
 
     /**
      * 应用聊天生成代码（流式 SSE）
@@ -105,7 +107,7 @@ public class AppController {
         return ResultUtils.success(deployUrl);
     }
 
-
+    // endregion
 
     // region 用户接口
 
@@ -138,6 +140,7 @@ public class AppController {
         return ResultUtils.success(app.getId());
     }
 
+
     /**
      * 更新应用（用户只能更新自己的应用名称）
      *
@@ -168,6 +171,7 @@ public class AppController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
 
     /**
      * 删除应用（用户只能删除自己的应用）
@@ -238,6 +242,7 @@ public class AppController {
         appVOPage.setRecords(appVOList);
         return ResultUtils.success(appVOPage);
     }
+
 
     /**
      * 分页获取精选应用列表

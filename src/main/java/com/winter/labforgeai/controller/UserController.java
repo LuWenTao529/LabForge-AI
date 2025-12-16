@@ -15,8 +15,8 @@ import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.model.vo.LoginUserVO;
 import com.winter.labforgeai.model.vo.UserVO;
 import com.winter.labforgeai.service.UserService;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +30,9 @@ import java.util.List;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
+    @Resource
     private UserService userService;
+
 
     /**
      * 用户注册
@@ -48,6 +49,7 @@ public class UserController {
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);
     }
+
 
     /**
      * 用户登录接口
@@ -69,6 +71,7 @@ public class UserController {
         return ResultUtils.success(loginUserVO);
     }
 
+
     /**
      * 获取当前登录用户信息的接口方法
      *
@@ -82,6 +85,7 @@ public class UserController {
         // 将用户实体对象转换为视图对象并封装到成功响应中返回
         return ResultUtils.success(userService.getLoginUserVO(loginUser));
     }
+
 
     /**
      * 用户登出接口
@@ -99,6 +103,7 @@ public class UserController {
         // 返回操作成功结果，包含登出操作的结果
         return ResultUtils.success(result);
     }
+
 
     /**
      * 创建用户
@@ -118,6 +123,7 @@ public class UserController {
         return ResultUtils.success(user.getId());
     }
 
+
     /**
      * 根据 id 获取用户（仅管理员）
      */
@@ -130,6 +136,7 @@ public class UserController {
         return ResultUtils.success(user);
     }
 
+
     /**
      * 根据 id 获取包装类
      */
@@ -139,6 +146,7 @@ public class UserController {
         User user = response.getData();
         return ResultUtils.success(userService.getUserVO(user));
     }
+
 
     /**
      * 删除用户
@@ -152,6 +160,7 @@ public class UserController {
         boolean b = userService.removeById(deleteRequest.getId());
         return ResultUtils.success(b);
     }
+
 
     /**
      * 更新用户
@@ -168,6 +177,7 @@ public class UserController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
 
     /**
      * 分页获取用户封装列表（仅管理员）
