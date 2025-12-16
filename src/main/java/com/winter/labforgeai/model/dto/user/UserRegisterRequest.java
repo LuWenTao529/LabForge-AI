@@ -1,4 +1,4 @@
-package com.winter.labforgeai.model.dto;
+package com.winter.labforgeai.model.dto.user;
 
 import lombok.Data;
 

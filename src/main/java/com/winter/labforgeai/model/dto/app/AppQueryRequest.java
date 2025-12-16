@@ -1,4 +1,4 @@
-package com.winter.labforgeai.model.dto;
+package com.winter.labforgeai.model.dto.app;
 
 import com.winter.labforgeai.common.PageRequest;
 import lombok.Data;

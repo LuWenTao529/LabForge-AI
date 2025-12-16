@@ -10,7 +10,7 @@ import com.winter.labforgeai.constant.UserConstant;
 import com.winter.labforgeai.exception.BusinessException;
 import com.winter.labforgeai.exception.ErrorCode;
 import com.winter.labforgeai.exception.ThrowUtils;
-import com.winter.labforgeai.model.dto.*;
+import com.winter.labforgeai.model.dto.user.*;
 import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.model.vo.LoginUserVO;
 import com.winter.labforgeai.model.vo.UserVO;

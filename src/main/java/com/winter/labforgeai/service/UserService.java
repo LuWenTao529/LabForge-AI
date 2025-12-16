@@ -2,7 +2,7 @@ package com.winter.labforgeai.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.winter.labforgeai.model.dto.UserQueryRequest;
+import com.winter.labforgeai.model.dto.user.UserQueryRequest;
 import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.model.vo.LoginUserVO;
 import com.winter.labforgeai.model.vo.UserVO;

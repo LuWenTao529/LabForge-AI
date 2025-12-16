@@ -7,7 +7,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.winter.labforgeai.exception.BusinessException;
 import com.winter.labforgeai.exception.ErrorCode;
-import com.winter.labforgeai.model.dto.UserQueryRequest;
+import com.winter.labforgeai.model.dto.user.UserQueryRequest;
 import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.mapper.UserMapper;
 import com.winter.labforgeai.model.enums.UserRoleEnum;

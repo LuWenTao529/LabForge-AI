@@ -1,15 +1,12 @@
-package com.winter.labforgeai.model.dto;
+package com.winter.labforgeai.model.dto.user;
 
-import com.winter.labforgeai.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.io.Serializable;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UserQueryRequest extends PageRequest implements Serializable {
+public class UserUpdateRequest implements Serializable {
 
     /**
      * id
@@ -22,9 +19,9 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     private String userName;
 
     /**
-     * 账号
+     * 用户头像
      */
-    private String userAccount;
+    private String userAvatar;
 
     /**
      * 简介
@@ -32,7 +29,7 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     private String userProfile;
 
     /**
-     * 用户角色：user/admin/ban
+     * 用户角色：user/admin
      */
     private String userRole;
 

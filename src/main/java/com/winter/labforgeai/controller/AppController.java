@@ -14,10 +14,7 @@ import com.winter.labforgeai.constant.UserConstant;
 import com.winter.labforgeai.exception.BusinessException;
 import com.winter.labforgeai.exception.ErrorCode;
 import com.winter.labforgeai.exception.ThrowUtils;
-import com.winter.labforgeai.model.dto.AppAddRequest;
-import com.winter.labforgeai.model.dto.AppAdminUpdateRequest;
-import com.winter.labforgeai.model.dto.AppQueryRequest;
-import com.winter.labforgeai.model.dto.AppUpdateRequest;
+import com.winter.labforgeai.model.dto.app.*;
 import com.winter.labforgeai.model.entity.App;
 import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.model.enums.CodeGenTypeEnum;
@@ -88,6 +85,26 @@ public class AppController {
                         .build()
                 ));
     }
+
+    /**
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
+    }
+
 
 
     // region 用户接口

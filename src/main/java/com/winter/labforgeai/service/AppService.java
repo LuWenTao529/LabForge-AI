@@ -2,7 +2,7 @@ package com.winter.labforgeai.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
-import com.winter.labforgeai.model.dto.AppQueryRequest;
+import com.winter.labforgeai.model.dto.app.AppQueryRequest;
 import com.winter.labforgeai.model.entity.App;
 import com.winter.labforgeai.model.entity.User;
 import com.winter.labforgeai.model.vo.AppVO;
@@ -47,7 +47,17 @@ public interface AppService extends IService<App> {
      * @param appId 应用ID，用于标识特定的应用
      * @param message 用户输入的消息内容
      * @param loginUser 当前登录用户信息
-     * @return 返回一个Flux<String>类型的响应流，包含生成的代码内容
+     * @return 返回生成的代码内容
      */
     Flux<String> chatToGenCode(Long appId, String message, User loginUser);
+
+
+    /**
+     * 部署应用程序的方法
+     *
+     * @param appId 应用程序ID，用于标识要部署的应用程序
+     * @param loginUser 登录用户信息，包含当前登录用户的权限和相关信息
+     * @return 返回可访问的 URL
+     */
+    String deployApp(Long appId, User loginUser);
 }
