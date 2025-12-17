@@ -2,7 +2,9 @@ package com.winter.labforgeai.ai;
 
 import com.winter.labforgeai.ai.model.HtmlCodeResult;
 import com.winter.labforgeai.ai.model.MultiFileCodeResult;
+import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
+import dev.langchain4j.service.UserMessage;
 import reactor.core.publisher.Flux;
 
 public interface AiCodeGeneratorService {
@@ -39,12 +41,22 @@ public interface AiCodeGeneratorService {
     Flux<String> generateHtmlCodeStream(String userMessage);
 
     /**
-     * 根据用户消息生成多文件代码流
-     * 该方法使用了系统消息注解，从指定的资源文件中加载提示信息
+     * 根据用户消息生成多文件代码 (流式)
      *
      * @param userMessage 用户输入的消息，将作为生成代码的依据
      * @return 返回一个Flux<String>类型的响应流，包含生成的多文件代码内容
      */
     @SystemMessage(fromResource = "prompt/codegen-multi-file-system-prompt.txt")
     Flux<String> generateMultiFileCodeStream(String userMessage);
+
+
+    /**
+     * 生成 Vue 项目代码（流式）
+     *
+     * @param userMessage 用户消息
+     * @return 生成过程的流式响应
+     */
+    @SystemMessage(fromResource = "prompt/codegen-vue-project-system-prompt.txt")
+    Flux<String> generateVueProjectCodeStream(@MemoryId long appId, @UserMessage String userMessage);
+
 }
