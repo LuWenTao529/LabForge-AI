@@ -2,6 +2,7 @@ package com.winter.labforgeai.service;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.service.IService;
+import com.winter.labforgeai.model.dto.app.AppAddRequest;
 import com.winter.labforgeai.model.dto.app.AppQueryRequest;
 import com.winter.labforgeai.model.entity.App;
 import com.winter.labforgeai.model.entity.User;
@@ -40,6 +41,15 @@ public interface AppService extends IService<App> {
      * @return 查询包装器
      */
     QueryWrapper getQueryWrapper(AppQueryRequest appQueryRequest);
+
+    /**
+     * 创建应用程序的方法
+     *
+     * @param appAddRequest 包含添加应用程序所需信息的请求对象
+     * @param loginUser 当前登录用户的信息
+     * @return 返回创建成功后的应用程序ID(Long类型)
+     */
+    Long createApp(AppAddRequest appAddRequest, User loginUser);
 
     /**
      * 根据应用ID和用户消息生成代码的响应流
