@@ -9,6 +9,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.winter.labforgeai.constant.AppConstant;
 import com.winter.labforgeai.core.AiCodeGeneratorFacade;
+import com.winter.labforgeai.core.handler.StreamHandlerExecutor;
 import com.winter.labforgeai.exception.BusinessException;
 import com.winter.labforgeai.exception.ErrorCode;
 import com.winter.labforgeai.exception.ThrowUtils;
@@ -25,7 +26,6 @@ import com.winter.labforgeai.service.ChatHistoryService;
 import com.winter.labforgeai.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -51,8 +51,12 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
     private UserService userService;
 
     @Resource AiCodeGeneratorFacade aiCodeGeneratorFacade;
-    @Autowired
+
+    @Resource
     private ChatHistoryService chatHistoryService;
+
+    @Resource
+    private StreamHandlerExecutor streamHandlerExecutor;
 
 
     @Override
@@ -78,25 +82,7 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         // 6. 调用 AI 生成代码 (流式)
         Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
         // 7. 收集 AI 生成回复并记录到对话历史
-        StringBuilder aiReseponseBuilder = new StringBuilder();
-        return contentFlux
-                .map(chunk -> {
-                    // 记录 AI 回复到对话历史
-                    aiReseponseBuilder.append(chunk);
-                    return chunk;
-                })
-                .doOnComplete(() -> {
-                    // 生成代码完成，更新应用状态
-                    String aiResponse = aiReseponseBuilder.toString();
-                    if (StrUtil.isNotBlank(aiResponse)) {
-                        chatHistoryService.addChatMessage(appId, aiResponse, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                    }
-                })
-                .doOnError(error -> {
-                    // 生成代码失败，记录错误信息到对话历史
-                    String errorMessage = "AI 回复错误:" + error.getMessage();
-                    chatHistoryService.addChatMessage(appId, errorMessage, ChatHistoryMessageTypeEnum.AI.getValue(), loginUser.getId());
-                });
+        return streamHandlerExecutor.doExecute(contentFlux, chatHistoryService, appId, loginUser, codeGenTypeEnum);
     }
 
 
