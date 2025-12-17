@@ -9,6 +9,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.winter.labforgeai.constant.AppConstant;
 import com.winter.labforgeai.core.AiCodeGeneratorFacade;
+import com.winter.labforgeai.core.builder.VueProjectBuilder;
 import com.winter.labforgeai.core.handler.StreamHandlerExecutor;
 import com.winter.labforgeai.exception.BusinessException;
 import com.winter.labforgeai.exception.ErrorCode;
@@ -57,6 +58,9 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private StreamHandlerExecutor streamHandlerExecutor;
+
+    @Resource
+    private VueProjectBuilder vueProjectBuilder;
 
 
     @Override
@@ -113,23 +117,38 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         if (!sourceDir.exists() || !sourceDir.isDirectory()) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "应用代码不存在，请先生成代码");
         }
-        // 7. 复制文件到部署目录
+        // 7. Vue项目特殊处理，执行构建
+        CodeGenTypeEnum codeGenTypeEnum = CodeGenTypeEnum.getEnumByValue(codeGenType);
+        if(codeGenTypeEnum == CodeGenTypeEnum.VUE_PROJECT) {
+            // Vue 项目构建
+            boolean buildSuccess = vueProjectBuilder.buildProject(sourceDirPath);
+            ThrowUtils.throwIf(!buildSuccess, ErrorCode.SYSTEM_ERROR, "构建Vue项目失败");
+            // 检查dist目录是否存在
+            File disDir = new File(sourceDirPath, "dist");
+            ThrowUtils.throwIf(!disDir.exists(), ErrorCode.SYSTEM_ERROR, "Vue项目构建失败，dist目录不存在");
+            // 构建完成 文件复制到部署目录
+            sourceDir = disDir;
+            log.info("Vue项目构建完成，复制dist目录到部署目录");
+        }
+        // 8. 复制文件到部署目录
         String deployDirPath = AppConstant.CODE_DEPLOY_ROOT_DIR + File.separator + deployKey;
         try {
             FileUtil.copyContent(sourceDir, new File(deployDirPath), true);
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "部署失败：" + e.getMessage());
         }
-        // 8. 更新应用的 deployKey 和部署时间
+        // 9. 更新应用的 deployKey 和部署时间
         App updateApp = new App();
         updateApp.setId(appId);
         updateApp.setDeployKey(deployKey);
         updateApp.setDeployedTime(LocalDateTime.now());
         boolean updateResult = this.updateById(updateApp);
         ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR, "更新应用部署信息失败");
-        // 9. 返回可访问的 URL
+        // 10. 返回可访问的 URL
         return String.format("%s/%s/", AppConstant.CODE_DEPLOY_HOST, deployKey);
     }
+
+
 
 
     @Override
