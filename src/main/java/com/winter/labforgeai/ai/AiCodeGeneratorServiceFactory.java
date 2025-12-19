@@ -98,10 +98,10 @@ public class AiCodeGeneratorServiceFactory {
                 .builder()
                 .id(appId)  // 设置记忆ID为appId
                 .chatMemoryStore(redisChatMemoryStore)  // 使用Redis作为记忆存储
-                .maxMessages(20)  // 设置最大记忆消息数为20
+                .maxMessages(50)  // 设置最大记忆消息数为50
                 .build();
         // 从数据库加载对话历史记忆
-        chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 20);  // 加载最近20条历史记录
+        chatHistoryService.loadChatHistoryToMemory(appId, chatMemory, 50);  // 加载最近50条历史记录
         return switch (codeGenType) {
             // HTML 和 多文件生成 使用默认模型
             case HTML,MULTI_FILE -> AiServices.builder(AiCodeGeneratorService.class)
