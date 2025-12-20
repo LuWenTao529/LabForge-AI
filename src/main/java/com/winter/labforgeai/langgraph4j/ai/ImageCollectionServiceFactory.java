@@ -40,8 +40,8 @@ public class ImageCollectionServiceFactory {
                 .tools(
                         imageSearchTool,
                         undrawIllustrationTool,
-                        mermaidDiagramTool,
-                        logoGeneratorTool
+                        mermaidDiagramTool
+//                        logoGeneratorTool 太贵了 省钱ing
                 )
                 .build();
     }

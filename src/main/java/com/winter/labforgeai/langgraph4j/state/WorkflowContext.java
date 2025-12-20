@@ -1,6 +1,7 @@
 package com.winter.labforgeai.langgraph4j.state;
 
 import com.winter.labforgeai.langgraph4j.model.ImageResource;
+import com.winter.labforgeai.langgraph4j.model.QualityResult;
 import com.winter.labforgeai.model.enums.CodeGenTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +23,11 @@ import java.util.Map;
 @AllArgsConstructor
 public class WorkflowContext implements Serializable {
 
+
+    /**
+     * 质量检查结果
+     */
+    private QualityResult qualityResult;
     /**
      * WorkflowContext 在 MessagesState 中的存储key
      */

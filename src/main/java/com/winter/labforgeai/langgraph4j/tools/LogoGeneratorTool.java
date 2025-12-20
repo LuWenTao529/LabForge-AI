@@ -23,7 +23,7 @@ public class LogoGeneratorTool {
     @Value("${dashscope.api-key:}")
     private String dashScopeApiKey;
 
-    @Value("${dashscope.image-model:wan2.2-t2i-flash}")
+    @Value("${dashscope.image-model:}")
     private String imageModel;
 
     @Tool("根据描述生成 Logo 设计图片，用于网站品牌标识")
