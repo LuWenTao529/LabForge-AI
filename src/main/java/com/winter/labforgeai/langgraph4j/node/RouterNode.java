@@ -1,6 +1,7 @@
 package com.winter.labforgeai.langgraph4j.node;
 
 import com.winter.labforgeai.ai.AiCodeGenTypeRoutingService;
+import com.winter.labforgeai.ai.AiCodeGenTypeRoutingServiceFactory;
 import com.winter.labforgeai.langgraph4j.state.WorkflowContext;
 import com.winter.labforgeai.model.enums.CodeGenTypeEnum;
 import com.winter.labforgeai.utils.SpringContextUtil;
@@ -21,7 +22,9 @@ public class RouterNode {
             CodeGenTypeEnum generationType;
             try {
                 // 获取AI路由服务
-                AiCodeGenTypeRoutingService routingService = SpringContextUtil.getBean(AiCodeGenTypeRoutingService.class);
+                // 获取AI路由服务工厂并创建新的路由服务实例
+                AiCodeGenTypeRoutingServiceFactory factory = SpringContextUtil.getBean(AiCodeGenTypeRoutingServiceFactory.class);
+                AiCodeGenTypeRoutingService routingService = factory.createAiCodeGenTypeRoutingService();
                 // 根据原始提示词进行智能路由
                 generationType = routingService.routeCodeGenType(context.getOriginalPrompt());
                 log.info("AI智能路由完成，选择类型: {} ({})", generationType.getValue(), generationType.getText());
