@@ -110,7 +110,9 @@ public class AiCodeGeneratorServiceFactory {
                         .hallucinatedToolNameStrategy(toolExecutionRequest -> ToolExecutionResultMessage.from(
                                 toolExecutionRequest, "Error: there is no tool called " + toolExecutionRequest.name()
                         ))
+                        .maxSequentialToolsInvocations(50)  // 最多连续使用 50 次工具
                         .inputGuardrails(new PromptSafetyInputGuardrail()) // 添加输入护轨
+//                        .outputGuardrails(new RetryOutputGuardrail()) // 添加输出护轨，与流式输出冲突
                         .build();
             }
             case HTML, MULTI_FILE -> {
@@ -121,6 +123,7 @@ public class AiCodeGeneratorServiceFactory {
                         .streamingChatModel(openAiStreamingChatModel)
                         .chatMemory(chatMemory)
                         .inputGuardrails(new PromptSafetyInputGuardrail()) // 添加输入护轨
+//                        .outputGuardrails(new RetryOutputGuardrail()) // 添加输出护轨，与流式输出冲突
                         .build();
             }
             default -> throw new BusinessException(ErrorCode.SYSTEM_ERROR,
