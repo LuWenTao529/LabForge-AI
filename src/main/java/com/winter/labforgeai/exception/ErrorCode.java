@@ -15,7 +15,9 @@ public enum ErrorCode { // 定义一个名为ErrorCode的枚举类，用于表�
     NOT_FOUND_ERROR(40400, "请求数据不存在"), // 数据不存在错误状态码
     FORBIDDEN_ERROR(40300, "禁止访问"), // 禁止访问错误状态码
     SYSTEM_ERROR(50000, "系统内部异常"), // 系统内部错误状态码
-    OPERATION_ERROR(50001, "操作失败"); // 操作失败错误状态码
+    OPERATION_ERROR(50001, "操作失败"),// 操作失败错误状态码
+    TOO_MANY_REQUEST(42900, "请求过于频繁");
+
 
     /**
      * 状态码
