@@ -1,6 +1,7 @@
 ### CUSTOM ###
 tmp
 /src/main/resources/application-local.yml
+/src/main/resources/application-prod.yml
 
 HELP.md
 target/

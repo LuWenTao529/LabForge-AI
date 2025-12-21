@@ -1,5 +1,6 @@
 package com.winter.labforgeai.config;
 
+import cn.hutool.core.util.StrUtil;
 import dev.langchain4j.community.store.memory.chat.redis.RedisChatMemoryStore;
 import dev.langchain4j.community.store.memory.chat.redis.StoreType;
 import lombok.Data;
@@ -34,13 +35,16 @@ public class RedisChatMemoryStoreConfig {
      */
     @Bean
     public RedisChatMemoryStore redisChatMemoryStore() {
-        return RedisChatMemoryStore.builder()
+         RedisChatMemoryStore.Builder builder = RedisChatMemoryStore.builder()
                 .host(host)
                 .port(port)
                 .password(password)
                 // todo 默认使用 RedisJSON 但是需要特定Redis版本支持，暂时修改为String
                 .storeType(StoreType.STRING)
-                .ttl(ttl)
-                .build();
+                .ttl(ttl);
+         if(StrUtil.isNotBlank(password)){
+             builder.user("default");
+         }
+        return builder.build();
     }
 }
