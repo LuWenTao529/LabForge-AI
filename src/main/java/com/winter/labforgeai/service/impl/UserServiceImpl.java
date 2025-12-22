@@ -61,7 +61,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        user.setUserName("歪歪");
+        user.setUserName("用戶" + userAccount);
         user.setUserRole(UserRoleEnum.USER.getValue());
         boolean saveResult = this.save(user);
         if (!saveResult) {
@@ -184,5 +184,57 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>  implements U
                 .orderBy(sortField, "ascend".equals(sortOrder));
     }
 
+    @Override
+    public boolean updateUserProfile(String userName, String userAvatar, String userProfile, User loginUser) {
+        // 校验用户昵称长度
+        if (StrUtil.isNotBlank(userName) && userName.length() > 256) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户昵称过长");
+        }
+        // 校验头像URL长度
+        if (StrUtil.isNotBlank(userAvatar) && userAvatar.length() > 1024) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "头像地址过长");
+        }
+        // 校验简介长度
+        if (StrUtil.isNotBlank(userProfile) && userProfile.length() > 512) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户简介过长");
+        }
+        // 更新用户信息
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        if (StrUtil.isNotBlank(userName)) {
+            updateUser.setUserName(userName);
+        }
+        if (StrUtil.isNotBlank(userAvatar)) {
+            updateUser.setUserAvatar(userAvatar);
+        }
+        if (StrUtil.isNotBlank(userProfile)) {
+            updateUser.setUserProfile(userProfile);
+        }
+        return this.updateById(updateUser);
+    }
+
+    @Override
+    public boolean updateUserPassword(String oldPassword, String newPassword, String confirmPassword, User loginUser) {
+        // 校验参数
+        if (StrUtil.hasBlank(oldPassword, newPassword, confirmPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码不能为空");
+        }
+        if (newPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新密码长度不能小于8位");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
+        }
+        // 校验旧密码是否正确
+        String encryptOldPassword = getEncryptPassword(oldPassword);
+        if (!encryptOldPassword.equals(loginUser.getUserPassword())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "旧密码错误");
+        }
+        // 更新密码
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        updateUser.setUserPassword(getEncryptPassword(newPassword));
+        return this.updateById(updateUser);
+    }
 
 }

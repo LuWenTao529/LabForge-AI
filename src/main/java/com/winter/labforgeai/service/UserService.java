@@ -98,4 +98,26 @@ public interface UserService extends IService<User> {
      * @return QueryWrapper 返回一个包含查询条件的QueryWrapper对象，用于数据库查询操作
      */
     QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    /**
+     * 更新用户个人信息
+     *
+     * @param userName    用户昵称
+     * @param userAvatar  用户头像
+     * @param userProfile 用户简介
+     * @param loginUser   当前登录用户
+     * @return 是否更新成功
+     */
+    boolean updateUserProfile(String userName, String userAvatar, String userProfile, User loginUser);
+
+    /**
+     * 修改用户密码
+     *
+     * @param oldPassword     旧密码
+     * @param newPassword     新密码
+     * @param confirmPassword 确认密码
+     * @param loginUser       当前登录用户
+     * @return 是否修改成功
+     */
+    boolean updateUserPassword(String oldPassword, String newPassword, String confirmPassword, User loginUser);
 }

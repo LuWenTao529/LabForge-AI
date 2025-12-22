@@ -200,4 +200,49 @@ public class UserController {
     }
 
 
+    /**
+     * 更新用户个人信息（普通用户可用）
+     *
+     * @param userProfileUpdateRequest 个人信息更新请求
+     * @param request                  HTTP请求
+     * @return 是否更新成功
+     */
+    @PostMapping("/update/profile")
+    public BaseResponse<Boolean> updateUserProfile(@RequestBody UserProfileUpdateRequest userProfileUpdateRequest,
+                                                   HttpServletRequest request) {
+        ThrowUtils.throwIf(userProfileUpdateRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = userService.updateUserProfile(
+                userProfileUpdateRequest.getUserName(),
+                userProfileUpdateRequest.getUserAvatar(),
+                userProfileUpdateRequest.getUserProfile(),
+                loginUser
+        );
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "更新个人信息失败");
+        return ResultUtils.success(true);
+    }
+
+
+    /**
+     * 修改用户密码（普通用户可用）
+     *
+     * @param userPasswordUpdateRequest 密码修改请求
+     * @param request                   HTTP请求
+     * @return 是否修改成功
+     */
+    @PostMapping("/update/password")
+    public BaseResponse<Boolean> updateUserPassword(@RequestBody UserPasswordUpdateRequest userPasswordUpdateRequest,
+                                                    HttpServletRequest request) {
+        ThrowUtils.throwIf(userPasswordUpdateRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = userService.updateUserPassword(
+                userPasswordUpdateRequest.getOldPassword(),
+                userPasswordUpdateRequest.getNewPassword(),
+                userPasswordUpdateRequest.getConfirmPassword(),
+                loginUser
+        );
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "修改密码失败");
+        return ResultUtils.success(true);
+    }
+
 }
