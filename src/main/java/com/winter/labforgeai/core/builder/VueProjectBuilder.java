@@ -1,10 +1,12 @@
 package com.winter.labforgeai.core.builder;
 
-import cn.hutool.core.util.RuntimeUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static cn.hutool.core.io.FileUtil.isWindows;
@@ -109,28 +111,50 @@ public class VueProjectBuilder {
     private boolean executeCommand(File workingDir, String command, int timeoutSeconds) {
         try {
             log.info("在目录 {} 中执行命令: {}", workingDir.getAbsolutePath(), command);
-            Process process = RuntimeUtil.exec(
-                    null,
-                    workingDir,
-                    command.split("\\s+") // 命令分割为数组
-            );
+
+            ProcessBuilder processBuilder = new ProcessBuilder(command.split("\\s+"));
+            processBuilder.directory(workingDir);
+            processBuilder.redirectErrorStream(true); // 合并错误流到标准输出
+
+            Process process = processBuilder.start();
+
+            // 异步读取进程输出（避免缓冲区满导致阻塞）
+            StringBuilder output = new StringBuilder();
+            Thread outputReader = Thread.ofVirtual().start(() -> {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        output.append(line).append("\n");
+                    }
+                } catch (Exception e) {
+                    log.warn("读取命令输出时发生异常: {}", e.getMessage());
+                }
+            });
+
             // 等待进程完成，设置超时
             boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
+
             if (!finished) {
                 log.error("命令执行超时（{}秒），强制终止进程", timeoutSeconds);
                 process.destroyForcibly();
+                outputReader.interrupt();
                 return false;
             }
+
+            // 等待输出读取完成
+            outputReader.join(5000);
+
             int exitCode = process.exitValue();
             if (exitCode == 0) {
                 log.info("命令执行成功: {}", command);
                 return true;
             } else {
-                log.error("命令执行失败，退出码: {}", exitCode);
+                log.error("命令执行失败，退出码: {}，输出内容:\n{}", exitCode, output);
                 return false;
             }
         } catch (Exception e) {
-            log.error("执行命令失败: {}, 错误信息: {}", command, e.getMessage());
+            log.error("执行命令失败: {}, 错误信息: {}", command, e.getMessage(), e);
             return false;
         }
     }
