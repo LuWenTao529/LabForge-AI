@@ -1,12 +1,16 @@
 package com.winter.labforgeai.config;
 
+import com.winter.labforgeai.monitor.AiModelMonitorListener;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import jakarta.annotation.Resource;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+
+import java.util.List;
 
 
 /**
@@ -38,6 +42,10 @@ public class StreamingChatModelConfig {
     // 是否记录响应日志的配置
     private boolean logResponses;
 
+    // AI模型监控监听器
+    @Resource
+    private AiModelMonitorListener aiModelMonitorListener;
+
     /**
      * 创建并配置一个原型(prototype)作用域的StreamingChatModel Bean
      * 使用@Bean注解将该方法返回的对象注册为Spring Bean
@@ -57,6 +65,7 @@ public class StreamingChatModelConfig {
                 .temperature(temperature)    // 设置温度参数
                 .logRequests(logRequests)    // 设置是否记录请求日志
                 .logResponses(logResponses)  // 设置是否记录响应日志
+                .listeners(List.of(aiModelMonitorListener))
                 .build();                    // 构建并返回实例
     }
 }

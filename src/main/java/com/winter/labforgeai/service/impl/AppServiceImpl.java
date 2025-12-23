@@ -25,6 +25,8 @@ import com.winter.labforgeai.model.enums.ChatHistoryMessageTypeEnum;
 import com.winter.labforgeai.model.enums.CodeGenTypeEnum;
 import com.winter.labforgeai.model.vo.AppVO;
 import com.winter.labforgeai.model.vo.UserVO;
+import com.winter.labforgeai.monitor.MonitorContext;
+import com.winter.labforgeai.monitor.MonitorContextHolder;
 import com.winter.labforgeai.service.AppService;
 import com.winter.labforgeai.service.ChatHistoryService;
 import com.winter.labforgeai.service.ScreenshotService;
@@ -120,10 +122,20 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
         }
         // 5. 校验后添加用户消息到对话历史
         chatHistoryService.addChatMessage(appId, message, ChatHistoryMessageTypeEnum.USER.getValue(), loginUser.getId());
-        // 6. 调用 AI 生成代码 (流式)
+        // 6. 设置监控上下文 userId 和 appId
+        MonitorContextHolder.setContext(
+                MonitorContext.builder()
+                        .userId(loginUser.getId().toString())
+                        .appId(appId.toString())
+                        .build()
+        );
+
+        // 7. 调用 AI 生成代码 (流式)
         Flux<String> contentFlux = aiCodeGeneratorFacade.generateAndSaveCodeStream(message, codeGenTypeEnum, appId);
-        // 7. 收集 AI 生成回复并记录到对话历史
-        return streamHandlerExecutor.doExecute(contentFlux, chatHistoryService, appId, loginUser, codeGenTypeEnum);
+        // 8. 收集 AI 生成回复并记录到对话历史
+        return streamHandlerExecutor.doExecute(contentFlux, chatHistoryService, appId, loginUser, codeGenTypeEnum)
+                // 流结束时清理(无论流是否 成功 或者 失败)
+                .doFinally(signalType -> MonitorContextHolder.clearContext());
     }
 
 
