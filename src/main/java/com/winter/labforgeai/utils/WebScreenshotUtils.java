@@ -24,17 +24,28 @@ import java.time.Duration;
 @Slf4j
 public class WebScreenshotUtils {
 
-    private static final WebDriver webDriver;
+    private static WebDriver webDriver;
+    private static boolean initialized = false;
+    private static String initError = null;
 
     static {
         final int DEFAULT_WIDTH = 1600;
         final int DEFAULT_HEIGHT = 900;
-        webDriver = initChromeDriver(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        try {
+            webDriver = initChromeDriver(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+            initialized = true;
+            log.info("WebScreenshotUtils 初始化成功");
+        } catch (Exception e) {
+            initError = e.getMessage();
+            log.error("WebScreenshotUtils 初始化失败: {}", e.getMessage(), e);
+        }
     }
 
     @PreDestroy
     public void destroy() {
-        webDriver.quit();
+        if (webDriver != null) {
+            webDriver.quit();
+        }
     }
 
 
@@ -45,6 +56,10 @@ public class WebScreenshotUtils {
      * @return 压缩后的截图文件路径，失败返回null
      */
     public static String saveWebPageScreenshot(String webUrl) {
+        if (!initialized || webDriver == null) {
+            log.error("Chrome 浏览器未初始化成功，无法截图。错误信息: {}", initError);
+            return null;
+        }
         if (StrUtil.isBlank(webUrl)) {
             log.error("网页URL不能为空");
             return null;
@@ -87,8 +102,12 @@ public class WebScreenshotUtils {
      */
     private static WebDriver initChromeDriver(int width, int height) {
         try {
-            // 自动管理 ChromeDriver
-            WebDriverManager.chromedriver().setup();
+            // 自动管理 ChromeDriver（强制下载最新版本）
+            WebDriverManager.chromedriver()
+                    .clearDriverCache()
+                    .clearResolutionCache()
+                    .setup();
+            log.info("ChromeDriver 路径: {}", WebDriverManager.chromedriver().getDownloadedDriverPath());
             // 配置 Chrome 选项
             ChromeOptions options = new ChromeOptions();
             // 无头模式
