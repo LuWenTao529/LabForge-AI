@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.time.Duration;
 import java.util.List;
 
 
@@ -36,6 +37,8 @@ public class StreamingChatModelConfig {
     // 温度参数配置，控制输出的随机性
     private Double temperature;
 
+    private Duration timeout;
+
     // 是否记录请求日志的配置
     private boolean logRequests;
 
@@ -57,15 +60,20 @@ public class StreamingChatModelConfig {
     @Scope("prototype")
     public StreamingChatModel streamingChatModelPrototype() {
         // 使用建造者模式构建OpenAiStreamingChatModel实例
-        return OpenAiStreamingChatModel.builder()
-                .apiKey(apiKey)              // 设置API密钥
-                .baseUrl(baseUrl)            // 设置基础URL
-                .modelName(modelName)        // 设置模型名称
-                .maxTokens(maxTokens)        // 设置最大令牌数
-                .temperature(temperature)    // 设置温度参数
-                .logRequests(logRequests)    // 设置是否记录请求日志
-                .logResponses(logResponses)  // 设置是否记录响应日志
-                .listeners(List.of(aiModelMonitorListener))
-                .build();                    // 构建并返回实例
+        OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
+                .apiKey(apiKey)
+                .baseUrl(baseUrl)
+                .modelName(modelName)
+                .maxTokens(maxTokens)
+                .temperature(temperature)
+                .logRequests(logRequests)
+                .logResponses(logResponses)
+                .listeners(List.of(aiModelMonitorListener));
+
+        if (timeout != null) {
+            builder.timeout(timeout);
+        }
+
+        return builder.build();                    // 构建并返回实例
     }
 }

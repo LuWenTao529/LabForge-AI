@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.time.Duration;
 /**
  * 配置类，用于配置LangChain4j中的OpenAI推理流式聊天模型
  */
@@ -31,6 +32,8 @@ public class ReasoningStreamingChatModelConfig {
     // 控制生成内容的随机性，值越大随机性越高
     private Double temperature;
 
+    private Duration timeout;
+
     // 是否记录请求日志，默认为false
     private Boolean logRequests = false;
 
@@ -46,14 +49,19 @@ public class ReasoningStreamingChatModelConfig {
     @Bean
     @Scope("prototype")
     public StreamingChatModel reasoningStreamingChatModelPrototype() {
-        return OpenAiStreamingChatModel.builder()
+        OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                 .apiKey(apiKey)
                 .baseUrl(baseUrl)
                 .modelName(modelName)
                 .maxTokens(maxTokens)
                 .temperature(temperature)
                 .logRequests(logRequests)
-                .logResponses(logResponses)
-                .build();
+                .logResponses(logResponses);
+
+        if (timeout != null) {
+            builder.timeout(timeout);
+        }
+
+        return builder.build();
     }
 }
