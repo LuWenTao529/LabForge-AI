@@ -4,8 +4,8 @@ import cn.hutool.json.JSONUtil;
 import com.winter.labforgeai.ai.AiCodeGeneratorService;
 import com.winter.labforgeai.ai.AiCodeGeneratorServiceFactory;
 import com.winter.labforgeai.ai.message.AiResponseMessage;
+import com.winter.labforgeai.ai.message.PartialToolCallMessage;
 import com.winter.labforgeai.ai.message.ToolExecutedMessage;
-import com.winter.labforgeai.ai.message.ToolRequestMessage;
 import com.winter.labforgeai.ai.model.HtmlCodeResult;
 import com.winter.labforgeai.ai.model.MultiFileCodeResult;
 import com.winter.labforgeai.constant.AppConstant;
@@ -118,9 +118,15 @@ public class AiCodeGeneratorFacade {
                         AiResponseMessage aiResponseMessage = new AiResponseMessage(partialResponse);
                         sink.next(JSONUtil.toJsonStr(aiResponseMessage));
                     })
-                    .beforeToolExecution((beforeToolExecution) -> {
-                        ToolRequestMessage toolRequestMessage = new ToolRequestMessage(beforeToolExecution.request());
-                        sink.next(JSONUtil.toJsonStr(toolRequestMessage));
+                    .onPartialToolCall((partialToolCall) -> {
+                        // 流式输出工具调用参数片段
+                        log.debug("[AiCodeGeneratorFacade] onPartialToolCall 收到: id={}, name={}, argsLen={}", 
+                                partialToolCall.id(), partialToolCall.name(),
+                                partialToolCall.partialArguments() != null ? partialToolCall.partialArguments().length() : 0);
+                        PartialToolCallMessage partialToolCallMessage = new PartialToolCallMessage(partialToolCall);
+                        String json = JSONUtil.toJsonStr(partialToolCallMessage);
+                        log.debug("[AiCodeGeneratorFacade] 发送 JSON: {}", json.length() > 100 ? json.substring(0, 100) + "..." : json);
+                        sink.next(json);
                     })
                     .onToolExecuted((ToolExecution toolExecution) -> {
                         ToolExecutedMessage toolExecutedMessage = new ToolExecutedMessage(toolExecution);

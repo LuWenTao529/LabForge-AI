@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 import java.time.Duration;
+import java.util.Map;
+
 /**
  * 配置类，用于配置LangChain4j中的OpenAI推理流式聊天模型
  */
@@ -40,6 +42,9 @@ public class ReasoningStreamingChatModelConfig {
     // 是否记录响应日志，默认为false
     private Boolean logResponses = false;
 
+    // 自定义参数（如 tool_stream: true）
+    private Map<String, Object> customParameters;
+
     /**
      * 创建一个原型作用域的StreamingChatModel Bean
      * 该方法返回一个配置好的OpenAI流式聊天模型实例
@@ -60,6 +65,11 @@ public class ReasoningStreamingChatModelConfig {
 
         if (timeout != null) {
             builder.timeout(timeout);
+        }
+
+        // 如果 customParameters 中有 tool_stream=true，启用 toolStream
+        if (customParameters != null && Boolean.TRUE.equals(customParameters.get("tool_stream"))) {
+            builder.toolStream(true);
         }
 
         return builder.build();

@@ -9,6 +9,7 @@ import lombok.Getter;
 public enum StreamMessageTypeEnum {
 
     AI_RESPONSE("ai_response", "AI响应"),
+    PARTIAL_TOOL_CALL("partial_tool_call", "工具调用参数片段"),
     TOOL_REQUEST("tool_request", "工具请求"),
     TOOL_EXECUTED("tool_executed", "工具执行结果");
 
