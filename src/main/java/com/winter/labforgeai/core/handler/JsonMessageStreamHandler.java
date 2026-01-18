@@ -188,8 +188,9 @@ public class JsonMessageStreamHandler {
     }
 
     /**
-     * 从流式 JSON 参数中提取 relativeFilePath 和 content 字段内容
-     * 使用状态机追踪解析进度，先解析文件路径，再流式输出 content 字段的值
+     * 从流式 JSON 参数中提取字段内容
+     * 支持 writeFile (relativeFilePath + content) 和 modifyFile (relativeFilePath + oldContent + newContent)
+     * 使用状态机追踪解析进度，流式输出内容字段的值
      */
     private String extractContentFromStream(String toolId, String chunk, Map<String, ToolContentParseState> toolParseStates) {
         ToolContentParseState state = toolParseStates.get(toolId);
@@ -204,95 +205,154 @@ public class JsonMessageStreamHandler {
             state.buffer.append(c);
             
             switch (state.phase) {
-                case WAITING_FOR_FILE_PATH_KEY -> {
-                    // 等待 "relativeFilePath" 关键字
+                case SCANNING_KEY -> {
+                    // 扫描JSON key
                     String bufStr = state.buffer.toString();
-                    if (bufStr.endsWith("\"relativeFilePath\"") || bufStr.endsWith("\"relativeFilePath\" ")) {
-                        state.phase = ParsePhase.WAITING_FOR_FILE_PATH_COLON;
+                    
+                    // 检测 relativeFilePath
+                    if (bufStr.endsWith("\"relativeFilePath\"")) {
+                        state.currentKey = "relativeFilePath";
+                        state.phase = ParsePhase.WAITING_FOR_COLON;
                         state.buffer.setLength(0);
                     }
-                }
-                case WAITING_FOR_FILE_PATH_COLON -> {
-                    // 等待冒号
-                    if (c == ':') {
-                        state.phase = ParsePhase.WAITING_FOR_FILE_PATH_START;
+                    // 检测 content (writeFile)
+                    else if (bufStr.endsWith("\"content\"")) {
+                        state.currentKey = "content";
+                        state.phase = ParsePhase.WAITING_FOR_COLON;
                         state.buffer.setLength(0);
                     }
-                }
-                case WAITING_FOR_FILE_PATH_START -> {
-                    // 等待引号开始
-                    if (c == '"') {
-                        state.phase = ParsePhase.IN_FILE_PATH_VALUE;
+                    // 检测 oldContent (modifyFile)
+                    else if (bufStr.endsWith("\"oldContent\"")) {
+                        state.currentKey = "oldContent";
+                        state.phase = ParsePhase.WAITING_FOR_COLON;
                         state.buffer.setLength(0);
                     }
-                }
-                case IN_FILE_PATH_VALUE -> {
-                    // 在文件路径值中
-                    if (state.escapeNext) {
-                        state.filePathBuilder.append(unescapeChar(c));
-                        state.escapeNext = false;
-                    } else if (c == '\\') {
-                        state.escapeNext = true;
-                    } else if (c == '"') {
-                        // 文件路径结束，保存并切换到等待 content
-                        state.relativeFilePath = state.filePathBuilder.toString();
-                        state.fileSuffix = cn.hutool.core.io.FileUtil.getSuffix(state.relativeFilePath);
-                        state.phase = ParsePhase.WAITING_FOR_CONTENT_KEY;
-                        state.buffer.setLength(0);
-                        // 输出 markdown 头部：[工具调用] 写入文件 xxx.js\n```js\n
-                        state.markdownStarted = true;
-                        output.append(String.format("\n\n[工具调用] %s %s\n```%s\n", 
-                                state.displayName, state.relativeFilePath, state.fileSuffix));
-                    } else {
-                        state.filePathBuilder.append(c);
-                    }
-                }
-                case WAITING_FOR_CONTENT_KEY -> {
-                    // 等待 "content" 关键字
-                    String bufStr = state.buffer.toString();
-                    if (bufStr.endsWith("\"content\"") || bufStr.endsWith("\"content\" ")) {
+                    // 检测 newContent (modifyFile)
+                    else if (bufStr.endsWith("\"newContent\"")) {
+                        state.currentKey = "newContent";
                         state.phase = ParsePhase.WAITING_FOR_COLON;
                         state.buffer.setLength(0);
                     }
                 }
                 case WAITING_FOR_COLON -> {
-                    // 等待冒号
                     if (c == ':') {
                         state.phase = ParsePhase.WAITING_FOR_VALUE_START;
                         state.buffer.setLength(0);
                     }
                 }
                 case WAITING_FOR_VALUE_START -> {
-                    // 等待引号开始
                     if (c == '"') {
-                        state.phase = ParsePhase.IN_CONTENT_VALUE;
+                        state.phase = ParsePhase.IN_VALUE;
                         state.buffer.setLength(0);
+                        state.valueBuilder.setLength(0);
+                        // 如果是内容字段，输出 markdown 头部
+                        if (isContentKey(state.currentKey)) {
+                            output.append(prepareMarkdownHeader(state, state.currentKey));
+                        }
                     }
                 }
-                case IN_CONTENT_VALUE -> {
-                    // 在 content 值中，处理转义和结束
+                case IN_VALUE -> {
                     if (state.escapeNext) {
-                        // 处理转义字符
-                        output.append(unescapeChar(c));
+                        char unescaped = unescapeChar(c);
+                        state.valueBuilder.append(unescaped);
+                        // 对于内容字段，流式输出
+                        if (isContentKey(state.currentKey) && state.markdownStarted) {
+                            output.append(unescaped);
+                        }
                         state.escapeNext = false;
                     } else if (c == '\\') {
-                        // 下一个字符是转义
                         state.escapeNext = true;
                     } else if (c == '"') {
-                        // content 值结束
-                        state.phase = ParsePhase.CONTENT_DONE;
+                        // 值结束，处理该字段
+                        String value = state.valueBuilder.toString();
+                        output.append(handleFieldComplete(state, value));
+                        state.phase = ParsePhase.SCANNING_KEY;
+                        state.buffer.setLength(0);
                     } else {
-                        // 正常字符，直接输出
-                        output.append(c);
+                        state.valueBuilder.append(c);
+                        // 对于内容字段，流式输出
+                        if (isContentKey(state.currentKey) && state.markdownStarted) {
+                            output.append(c);
+                        }
                     }
-                }
-                case CONTENT_DONE -> {
-                    // content 已结束，忽略后续内容
                 }
             }
         }
         
         return output.toString();
+    }
+    
+    /**
+     * 判断是否是需要流式输出的内容字段
+     */
+    private boolean isContentKey(String key) {
+        return "content".equals(key) || "oldContent".equals(key) || "newContent".equals(key);
+    }
+    
+    /**
+     * 处理字段解析完成
+     */
+    private String handleFieldComplete(ToolContentParseState state, String value) {
+        StringBuilder output = new StringBuilder();
+        
+        switch (state.currentKey) {
+            case "relativeFilePath" -> {
+                state.relativeFilePath = value;
+                state.fileSuffix = cn.hutool.core.io.FileUtil.getSuffix(value);
+            }
+            case "content" -> {
+                // writeFile 的 content 字段结束，关闭 markdown
+                // 注意：流式输出已在 IN_VALUE 阶段完成
+            }
+            case "oldContent" -> {
+                // modifyFile 的 oldContent 字段结束
+                // 关闭旧内容的 markdown，准备输出 newContent 的标题
+                if (state.markdownStarted) {
+                    output.append("\n```\n\n**新内容:**\n```").append(state.fileSuffix).append("\n");
+                    state.contentBlockCount++;
+                }
+            }
+            case "newContent" -> {
+                // modifyFile 的 newContent 字段结束
+                // 注意：markdown 关闭在 TOOL_EXECUTED 阶段处理
+            }
+        }
+        
+        // 在解析到文件路径后，且下一个是内容字段前，输出 markdown 头部
+        // 这里需要在开始解析内容字段时输出头部
+        state.currentKey = null;
+        return output.toString();
+    }
+    
+    /**
+     * 为内容字段准备 markdown 头部
+     */
+    private String prepareMarkdownHeader(ToolContentParseState state, String contentKey) {
+        if (state.relativeFilePath == null) {
+            return "";
+        }
+        StringBuilder header = new StringBuilder();
+        
+        if ("content".equals(contentKey)) {
+            // writeFile: [工具调用] 写入文件 xxx.vue\n```vue\n
+            header.append(String.format("\n\n[工具调用] %s %s\n```%s\n",
+                    state.displayName, state.relativeFilePath, state.fileSuffix));
+            state.markdownStarted = true;
+        } else if ("oldContent".equals(contentKey)) {
+            // modifyFile: [工具调用] 修改文件 xxx.vue\n\n**旧内容:**\n```vue\n
+            header.append(String.format("\n\n[工具调用] %s %s\n\n**旧内容:**\n```%s\n",
+                    state.displayName, state.relativeFilePath, state.fileSuffix));
+            state.markdownStarted = true;
+            state.contentBlockCount = 1;
+        } else if ("newContent".equals(contentKey) && state.contentBlockCount == 0) {
+            // 如果 newContent 先出现（不太可能，但做兼容）
+            header.append(String.format("\n\n[工具调用] %s %s\n\n**新内容:**\n```%s\n",
+                    state.displayName, state.relativeFilePath, state.fileSuffix));
+            state.markdownStarted = true;
+            state.contentBlockCount = 2;
+        }
+        
+        return header.toString();
     }
     
     /**
@@ -313,31 +373,35 @@ public class JsonMessageStreamHandler {
      * 工具内容解析状态类
      */
     private static class ToolContentParseState {
-        ParsePhase phase = ParsePhase.WAITING_FOR_FILE_PATH_KEY;
+        ParsePhase phase = ParsePhase.SCANNING_KEY;
         StringBuilder buffer = new StringBuilder();
-        StringBuilder filePathBuilder = new StringBuilder();  // 跨chunk累积文件路径
+        StringBuilder valueBuilder = new StringBuilder();  // 当前字段值累积
         boolean escapeNext = false;
-        // 新增：追踪流式输出状态
+        
+        // 当前正在解析的字段名
+        String currentKey;
+        
+        // 工具信息
         String toolName;           // 工具名称
         String displayName;        // 工具显示名称
+        
+        // 解析出的字段值
         String relativeFilePath;   // 文件相对路径
         String fileSuffix;         // 文件后缀
+        
+        // 流式输出状态
         boolean markdownStarted = false;  // markdown代码块是否已开始
-        boolean isStreamingTool = false;  // 是否是流式工具（有流式内容输出）
+        boolean isStreamingTool = false;  // 是否是流式工具
+        int contentBlockCount = 0;        // 已输出的内容块数量（modifyFile 有2个）
     }
 
     /**
      * 解析阶段枚举
      */
     private enum ParsePhase {
-        WAITING_FOR_FILE_PATH_KEY,  // 等待 "relativeFilePath" 关键字
-        WAITING_FOR_FILE_PATH_COLON, // 等待文件路径冒号
-        WAITING_FOR_FILE_PATH_START, // 等待文件路径引号开始
-        IN_FILE_PATH_VALUE,          // 在文件路径值中
-        WAITING_FOR_CONTENT_KEY,     // 等待 "content" 关键字
-        WAITING_FOR_COLON,           // 等待冒号
-        WAITING_FOR_VALUE_START,     // 等待引号开始
-        IN_CONTENT_VALUE,            // 在 content 值中
-        CONTENT_DONE                 // content 解析完成
+        SCANNING_KEY,           // 扫描JSON key
+        WAITING_FOR_COLON,      // 等待冒号
+        WAITING_FOR_VALUE_START,// 等待引号开始
+        IN_VALUE                // 在值中
     }
 }
